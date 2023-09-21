@@ -11,9 +11,11 @@ public:
   InetAddress(std::string const& address, uint16_t port);
   ~InetAddress() = default;
 
-  uint16_t const& port() const { return port_;}
-  std::string const& address() const { return address_;}
-  sa_family_t family() const { return addr_.sin_family; }
+  uint16_t const& Getport() const { return addr_.sin_port;}
+  std::string const& Getaddress() const { return std::string(inet_ntoa(addr_.sin_addr)) ;}
+  sa_family_t Getfamily() const { return addr_.sin_family; }
+  
+  sockaddr_in const& Getaddr() const { return addr_;}
 
 private:
   union {

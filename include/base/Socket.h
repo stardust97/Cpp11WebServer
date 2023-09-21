@@ -1,19 +1,24 @@
 
-
+#include <memory>
 
 namespace xtc{
 
 // support TCP only
 class Socket {
 public:
-  Socket() ;
+  Socket();
+  Socket(InetAddress const& address);
   ~Socket() = default;
 
   void bind(InetAddress const& address);
   void listen();
-  void accept();
+  int32_t accept(InetAddress const& address);
+
+
+
 private:
   int32_t fd_;
+  std::shared_ptr<InetAddress> address_;
 };
 
 
