@@ -16,82 +16,76 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/epoll.h>
-#include <sys/socket.h>
 #include <fcntl.h>
 
 #include "util/error_process.h"
+#include "base/Socket.h"
+#include "base/InetAddress.h"
+#include "base/Epoll.h"
 
 #define MAX_EVENTS 1024
 #define MAX_BUF_SIZE 1024
 
-void read_client_message(int fd, void *buf, size_t nbytes) {
-  auto read_bytes = read(fd, buf, nbytes);
-  if(read_bytes > 0 ){
-    printf("recv msg: %s\n", (char*) buf); // FIXME printf非线程安全
-  } else if (read_bytes == 0) {
-    printf("client socket disconnected!\n");
-  } else {
-    xtc::errif(true, "read error!\n");
-  }
+
+void set_fd_no_blocked(int32_t fd) {
+  int flags = fcntl(fd,F_GETFL,0);
+  flags |= O_NONBLOCK;
+  fcntl(fd,F_SETFL,flags);
 }
 
-void add_fd_to_epoll(int epoll_fd, int fd, bool ET) {
-  epoll_event ev;
-  ev.events = EPOLLIN ;
-  if (ET) {
-    ev.events |= EPOLLET;
-    int flags = fcntl(fd,F_GETFL,0);;    //ET需要搭配非阻塞式socket使用
-    fcntl(fd,F_SETFL,flags);
-  }
-  ev.data.fd = fd;
-  epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ev);    //添加事件到epoll
-}
 
 int main() {
-  int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  xtc::errif(sockfd == -1,"create socket error!\n");
+  xtc::Socket* socket = new xtc::Socket();
+  xtc::InetAddress addr("127.0.0.1", 8888);
+  socket->bind(addr);
+  socket->listen();
 
-  struct sockaddr_in  serv_addr;
-  bzero(&serv_addr,sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET; // IPV4
-  serv_addr.sin_port = htons(8888);
-  serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-  int bind_res = bind(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-  xtc::errif(bind_res == -1,"bind error!\n");
+  xtc::Epoll *epoll = new xtc::Epoll();
+  epoll->AddToEpoll(socket->GetFd(), EPOLLIN); //负责监听的文件描述符设置为LT，阻塞
 
-  int listen_res = listen(sockfd, SOMAXCONN);
-  xtc::errif(listen_res == -1,"listen error!\n");
-
-  // 将socketfd加入epoll，设置为LT，监听其可读事件
-  struct epoll_event ev;
-  ev.data.fd = sockfd;
-  ev.events = EPOLLIN;  
-  int epoll_fd = epoll_create1(0);
-  epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sockfd, &ev);
-
-  struct sockaddr_in client_addr;
-  bzero(&client_addr, sizeof(client_addr));
-  socklen_t client_len;
-  char buf[MAX_BUF_SIZE];
-  struct epoll_event events[MAX_EVENTS];
-
-  while(true) {
+  while (true) {
     printf("start to wait\n");
-    int nfds =  epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
-    for (int i = 0; i < nfds; i++) {
-      if (events[i].data.fd == sockfd) {
-        int client_fd = accept(sockfd, (struct sockaddr*) &client_addr, &client_len);
-        xtc::errif(client_fd == -1, "accept error!\n");
-        printf("new client fd %d! IP: %s Port: %d\n", client_fd, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-        add_fd_to_epoll(epoll_fd, client_fd, true);
 
-      } else if (events[i].events & EPOLLIN) {
-        int client_fd = events[i].data.fd;
-        bzero(buf,sizeof(buf));
-        printf(" client msg : fd %d! IP: %s Port: %d\n", client_fd, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-        read_client_message(client_fd, buf, sizeof(buf));      
+    std::vector<epoll_event> active_events(MAX_EVENTS);
+    epoll->Wait(active_events);
+    for (auto& ev:active_events) {
+      if (ev.data.fd == socket->GetFd()) {
+        xtc::InetAddress addr;
+        int32_t client_fd = socket->accept(addr); //API不够优雅
+        auto& client_addr = addr.Getaddr();
+        printf("new client fd %d! IP: %s Port: %d\n", client_fd, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+        set_fd_no_blocked(client_fd);
+        epoll->AddToEpoll(client_fd, EPOLLIN | EPOLLET);
+      } else if (ev.events & EPOLLIN) {
+        // TODO 读取任务封装
+        printf("client has new msg\n");
+        char buf[MAX_BUF_SIZE];
+        int32_t client_fd = ev.data.fd;
+        
+        // TODO 封装fd为channel，记录其IP 端口等信息，此处posix接口无法获取IP 端口等信息。
+        while (true) { // ET模式需要一次性读出所有数据
+          bzero(buf, MAX_BUF_SIZE);
+          int32_t read_bytes = read(client_fd, buf, MAX_BUF_SIZE);
+          if(read_bytes > 0) {
+            printf("client fd: %d, recv msg: %s\n", client_fd, buf);
+          } else if(read_bytes == 0){  //EOF，客户端断开连接
+            printf("EOF, client fd %d disconnected\n", client_fd);
+            close(client_fd);
+            epoll->RemoveFromEpoll(client_fd);
+            break;
+           } else if(read_bytes == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK))){//非阻塞IO，这个条件表示本次数据全部读取完毕
+            printf("client %d read finished!\n", client_fd);
+            break;
+          } else if(read_bytes == -1 && errno == EINTR){  //客户端正常中断、继续读取
+            printf("need next read\n");
+            break;
+          } 
+        }
+      } else {
+        // printf("events %d TODO\n", ev.events); //TODO 其他事件的处理
       }
     }
   }
+
   return 0;
 }

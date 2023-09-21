@@ -1,32 +1,46 @@
 #include "base/Socket.h"
 
+#include <memory>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
 #include "base/InetAddress.h"
-
+#include "util/error_process.h"
 
 
 
 
 
 namespace xtc{
-  Socket::Socket() :fd_(-1) {
+  Socket::Socket() :fd_(-1), address_(nullptr) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     fd_ = sockfd;
   }
 
-  void Socket::bind(InetAddress const& address) {
-    struct sockaddr_in addr;
-    addr.sin_family = address.family();
-    addr.sin_port = htons(address.addr_.sin_port);
-    addr.sin_addr.s_addr = htonl(address.getAddress());
-    int ret = ::bind(fd_, (struct sockaddr*)&addr, sizeof(addr));
-    if (ret < 0) {
-      throw std::runtime_error("bind failed");
-    }
+  Socket::Socket(InetAddress const& address) {
+    int32_t sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    fd_ = sockfd;
+    address_ = std::make_shared<InetAddress>(address);
   }
 
+  void Socket::bind(InetAddress const& address) {
+    address_ = std::make_shared<InetAddress>(address);
+    auto& addr_in= address_->Getaddr();
+    errif(::bind(fd_, (struct sockaddr*)(&addr_in), sizeof(addr_in)), "socket bind filed");
+  }
+
+  void Socket::listen() {
+    errif(::listen(fd_, SOMAXCONN), "socket listen failed");
+  }
+
+  int32_t Socket::accept(InetAddress const& address) {
+    auto& addr_in= address.Getaddr(); //BUG const变量无法修改？
+
+    socklen_t client_len;
+    int32_t client_fd = ::accept(fd_, (struct sockaddr*)(&addr_in), &client_len);
+    errif(client_fd == -1 , "scoket accept failed");
+    return client_fd;
+  }
 
 
 } // namespace xtc

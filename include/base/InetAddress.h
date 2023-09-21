@@ -1,6 +1,12 @@
+#ifndef __XTC__INTE_ADDRESS__H
+#define __XTC__INTE_ADDRESS__H
+
 #include <string>
 
-
+#include <unistd.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <sys/epoll.h>
 
 namespace xtc{
 
@@ -11,9 +17,11 @@ public:
   InetAddress(std::string const& address, uint16_t port);
   ~InetAddress() = default;
 
-  uint16_t const& port() const { return port_;}
-  std::string const& address() const { return address_;}
-  sa_family_t family() const { return addr_.sin_family; }
+  uint16_t const& Getport() const { return addr_.sin_port;}
+  std::string Getaddress() const { return std::string(inet_ntoa(addr_.sin_addr)) ;}
+  sa_family_t Getfamily() const { return addr_.sin_family; }
+  
+  sockaddr_in const& Getaddr() const { return addr_;}
 
 private:
   union {
@@ -24,11 +32,6 @@ private:
 
 
 
-
-
-
-
-
-
-
 } // namespace xtc
+
+#endif
