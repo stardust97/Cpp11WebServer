@@ -1,11 +1,9 @@
 #ifndef __XTC__SOCKET__H
 #define __XTC__SOCKET__H
 
-
 #include <memory>
 
 #include "base/InetAddress.h"
-
 
 namespace xtc{
 

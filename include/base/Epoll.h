@@ -1,8 +1,6 @@
 #ifndef __XTC__EPOLL__H
 #define __XTC__EPOLL__H
 
-
-
 #include <cstdint>
 #include <memory>
 #include <vector>
