@@ -10,6 +10,8 @@
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 
+#include "base/Channel.h"
+
 namespace xtc{
 
 class Epoll {
@@ -23,16 +25,16 @@ public:
 
   void ModifyEpollEvent(int32_t fd, uint32_t eventes);
 
-  void Wait(std::vector<epoll_event>& active_events);
+  void Wait(std::vector<epoll_event>& active_events); //MARK 弃用
+  void Wait( std::vector<xtc::Channel*>& active_events);
 
 private:
-  void fillActiveEvents(int32_t nums, std::vector<epoll_event>& active_events);
-
+  void fillActiveEvents( std::vector<Channel*>& active_events, int32_t nums);
   static constexpr int32_t kInitEventListSize = 16;
 
   int32_t epoll_fd_;
 
-  std::vector<epoll_event> events_;
+  std::vector<epoll_event> events_; //发生事件的
 
 };
 

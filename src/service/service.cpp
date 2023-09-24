@@ -22,6 +22,8 @@
 #include "base/Socket.h"
 #include "base/InetAddress.h"
 #include "base/Epoll.h"
+#include "base/Channel.h"
+
 
 #define MAX_EVENTS 1024
 #define MAX_BUF_SIZE 1024
@@ -41,17 +43,17 @@ int main() {
   socket->listen();
 
   xtc::Epoll *epoll = new xtc::Epoll();
-  epoll->AddToEpoll(socket->GetFd(), EPOLLIN); //负责监听的文件描述符设置为LT，阻塞
+  xtc::Channel* service_channel = new xtc::Channel(epoll, socket->GetFd());
+  service_channel->EnableReading(); //阻塞 LT模式
 
   while (true) {
     printf("start to wait\n");
-
-    std::vector<epoll_event> active_events(MAX_EVENTS);
+    std::vector<xtc::Channel> active_events(MAX_EVENTS);
     epoll->Wait(active_events);
     for (auto& ev:active_events) {
       if (ev.data.fd == socket->GetFd()) {
         xtc::InetAddress addr;
-        int32_t client_fd = socket->accept(addr); //API不够优雅
+        int32_t client_fd = socket->accept(addr); 
         auto& client_addr = addr.Getaddr();
         printf("new client fd %d! IP: %s Port: %d\n", client_fd, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
         set_fd_no_blocked(client_fd);

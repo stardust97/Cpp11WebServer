@@ -35,21 +35,35 @@ void Epoll::RemoveFromEpoll(int32_t fd){
 }
 
 // TODO
-void Epoll::ModifyEpollEvent(int32_t fd, uint32_t eventes){
-
+void Epoll::ModifyEpollEvent(int32_t fd, uint32_t events){
+  struct epoll_event ev;
+  bzero(&ev, sizeof(struct epoll_event));
+  ev.events = events;
+  ev.data.fd = fd;  
+  epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, fd, NULL);
 }
 
-void Epoll::Wait(std::vector<epoll_event>& active_events) {
+// void Epoll::Wait(std::vector<epoll_event>& active_events) {
+//   int32_t nfds = epoll_wait(epoll_fd_, events_.data(), events_.size(), -1);
+//   errif(nfds == -1, "epoll_wait failed");
+//   fillActiveEvents(nfds, active_events);
+// }
+
+void Epoll::Wait(std::vector<Channel*>& active_events) {
+  // std::vector<int> epoll
   int32_t nfds = epoll_wait(epoll_fd_, events_.data(), events_.size(), -1);
-  errif(nfds == -1, "epoll_wait failed");
-  fillActiveEvents(nfds, active_events);
+  fillActiveEvents(active_events, nfds);
+
 }
 
-void Epoll::fillActiveEvents(int32_t nums, std::vector<epoll_event>& active_events) {
+void Epoll::fillActiveEvents( std::vector<Channel*>& active_events, int32_t nums) {
   for (int32_t i = 0; i < nums; i++) {
-    active_events.push_back(events_[i]);
+    Channel* ch = static_cast<Channel*>( events_[i].data.ptr); // NOTE 这里使用ptr来记录发生事件的Channel，而不是fd
+    ch ->SetRevents(events_[i].events);
+    active_events.push_back(ch);
   }
 }
+
 
 
 } // namespace xtc

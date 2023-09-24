@@ -35,7 +35,7 @@ namespace xtc{
 
   int32_t Socket::accept(InetAddress const& address) {
     auto& addr_in= address.Getaddr(); //BUG const变量无法修改？
-
+    // FIXME const变量转换成指针，其结果是未定义的！！
     socklen_t client_len;
     int32_t client_fd = ::accept(fd_, (struct sockaddr*)(&addr_in), &client_len);
     errif(client_fd == -1 , "scoket accept failed");
