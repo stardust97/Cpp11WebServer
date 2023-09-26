@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "base/InetAddress.h"
+#include "base/Channel.h"
 
 namespace xtc{
 
@@ -16,7 +17,7 @@ public:
 
   void bind(InetAddress const& address);
   void listen();
-  int32_t accept(InetAddress const& address);
+  int32_t accept(InetAddress& address);
   int32_t const& GetFd() {return fd_;} ;
 
 

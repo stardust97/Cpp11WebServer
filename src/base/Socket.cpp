@@ -4,11 +4,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#include "base/InetAddress.h"
 #include "util/error_process.h"
-
-
-
 
 
 namespace xtc{
@@ -25,7 +21,7 @@ namespace xtc{
 
   void Socket::bind(InetAddress const& address) {
     address_ = std::make_shared<InetAddress>(address);
-    auto& addr_in= address_->Getaddr();
+    auto& addr_in= address_->GetAddr();
     errif(::bind(fd_, (struct sockaddr*)(&addr_in), sizeof(addr_in)), "socket bind filed");
   }
 
@@ -33,8 +29,8 @@ namespace xtc{
     errif(::listen(fd_, SOMAXCONN), "socket listen failed");
   }
 
-  int32_t Socket::accept(InetAddress const& address) {
-    auto& addr_in= address.Getaddr(); //BUG const变量无法修改？
+  int32_t Socket::accept(InetAddress& address) {
+    auto& addr_in= address.GetAddr(); //FIXED GetAddr现在返回的是引用，而不是const引用
     // FIXME const变量转换成指针，其结果是未定义的！！
     socklen_t client_len;
     int32_t client_fd = ::accept(fd_, (struct sockaddr*)(&addr_in), &client_len);
