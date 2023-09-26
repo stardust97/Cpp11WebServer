@@ -21,44 +21,36 @@ Epoll::~Epoll() {
   }
 }
 
-// TODO ET模式下的非阻塞文件描述符
-void Epoll::AddToEpoll(int32_t fd, uint32_t events){
+void Epoll::AddToEpoll(Channel* channel, uint32_t events){
   struct epoll_event ev;
   bzero(&ev, sizeof(struct epoll_event));
   ev.events = events;
-  ev.data.fd = fd;
-  epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd, &ev);   
+  // NOTE 这里使用ptr来记录发生事件的Channel，而不是fd
+  ev.data.ptr = static_cast<void*> (channel);
+  epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, channel->GetFd(), &ev);   
 }
 
-void Epoll::RemoveFromEpoll(int32_t fd){
-  epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, fd, NULL);   
+void Epoll::RemoveFromEpoll(Channel* channel){
+  epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, channel->GetFd(), NULL);   
 }
 
-// TODO
-void Epoll::ModifyEpollEvent(int32_t fd, uint32_t events){
+void Epoll::ModifyEpollEvent(Channel* channel, uint32_t events){
   struct epoll_event ev;
   bzero(&ev, sizeof(struct epoll_event));
   ev.events = events;
-  ev.data.fd = fd;  
-  epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, fd, NULL);
+  ev.data.ptr =static_cast<void*> (channel) ;  
+  epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, channel->GetFd(), NULL);
 }
-
-// void Epoll::Wait(std::vector<epoll_event>& active_events) {
-//   int32_t nfds = epoll_wait(epoll_fd_, events_.data(), events_.size(), -1);
-//   errif(nfds == -1, "epoll_wait failed");
-//   fillActiveEvents(nfds, active_events);
-// }
 
 void Epoll::Wait(std::vector<Channel*>& active_events) {
   // std::vector<int> epoll
   int32_t nfds = epoll_wait(epoll_fd_, events_.data(), events_.size(), -1);
-  fillActiveEvents(active_events, nfds);
-
+  fill_active_channels(active_events, nfds);
 }
 
-void Epoll::fillActiveEvents( std::vector<Channel*>& active_events, int32_t nums) {
+void Epoll::fill_active_channels( std::vector<Channel*>& active_events, int32_t nums) {
   for (int32_t i = 0; i < nums; i++) {
-    Channel* ch = static_cast<Channel*>( events_[i].data.ptr); // NOTE 这里使用ptr来记录发生事件的Channel，而不是fd
+    Channel* ch = static_cast<Channel*>(events_[i].data.ptr);
     ch ->SetRevents(events_[i].events);
     active_events.push_back(ch);
   }

@@ -1,7 +1,9 @@
 #include "base/Channel.h"
 
 #include <memory>
-#include "Channel.h"
+#include <fcntl.h>
+
+#include "base/Channel.h"
 
 
 
@@ -15,14 +17,34 @@ Channel::Channel(Epoll* ep, int32_t fd) :
 void Channel::SetRevents(uint32_t events){
   revents_ = events;
 }
+uint32_t Channel::GetActiveEvents() {
+  return revents_;
+}
 
 void Channel::EnableReading() {
-  events_ |= EPOLLIN ;
+  events_ |= kReadEvent;
   if(is_polled_) {
-    epoll_ -> ModifyEpollEvent(fd_, events_);
+    epoll_ -> ModifyEpollEvent(this, events_);
   } else {
-    epoll_ -> AddToEpoll(fd_, events_);
+    epoll_ -> AddToEpoll(this, events_);
   }
+}
+
+void Channel::EnableETReading() {
+  events_ |= KETReadEvent;
+  set_fd_noblocked();
+  if(is_polled_) {
+    epoll_ -> ModifyEpollEvent(this, events_);
+  } else {
+    epoll_ -> AddToEpoll(this, events_);
+  }
+}
+
+
+void Channel::set_fd_noblocked() {
+  int flags = fcntl(fd_, F_GETFL, 0);
+  flags |= O_NONBLOCK;
+  fcntl(fd_, F_SETFL, flags);
 }
 
 void Channel::DisableReading() {
@@ -40,11 +62,6 @@ void Channel::DisableWriting() {
 void Channel::DisableAll() {
 
 }
-
-
-
-
-
 
 void Channel::SetReadCallback(ReadEventCallback const& cb) {
   read_callback_ = cb;

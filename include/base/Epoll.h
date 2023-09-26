@@ -10,31 +10,33 @@
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 
-#include "base/Channel.h"
+// #include "base/Channel.h" //BUG 头文件不应该互相包含！
+
 
 namespace xtc{
+class Channel; //利用前置声明代替循环包含的头文件
 
 class Epoll {
 public:
   Epoll();
   ~Epoll();
 
-  void AddToEpoll(int32_t fd, uint32_t events);
+  void AddToEpoll(Channel* channel, uint32_t events);
 
-  void RemoveFromEpoll(int32_t fd);
+  void RemoveFromEpoll(Channel* channel);
 
-  void ModifyEpollEvent(int32_t fd, uint32_t eventes);
+  void ModifyEpollEvent(Channel* channel, uint32_t eventes);
 
-  void Wait(std::vector<epoll_event>& active_events); //MARK 弃用
   void Wait( std::vector<xtc::Channel*>& active_events);
 
 private:
-  void fillActiveEvents( std::vector<Channel*>& active_events, int32_t nums);
+  void fill_active_channels( std::vector<Channel*>& active_events, int32_t nums);
+  
   static constexpr int32_t kInitEventListSize = 16;
 
   int32_t epoll_fd_;
 
-  std::vector<epoll_event> events_; //发生事件的
+  std::vector<epoll_event> events_; //发生事件的epoll_event
 
 };
 

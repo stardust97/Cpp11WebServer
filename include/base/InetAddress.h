@@ -21,7 +21,7 @@ public:
   std::string Getaddress() const { return std::string(inet_ntoa(addr_.sin_addr)) ;}
   sa_family_t Getfamily() const { return addr_.sin_family; }
   
-  sockaddr_in const& Getaddr() const { return addr_;}
+  sockaddr_in& GetAddr() const { return addr_;}
 
 private:
   union {
