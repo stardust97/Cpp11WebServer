@@ -5,9 +5,11 @@
 
 #include <memory>
 #include <functional>
-#include "base/Epoll.h"
+#include <sys/epoll.h>
+// #include "base/Epoll.h"
 
 namespace xtc{
+class Epoll;
 
 class Channel {
   constexpr static int32_t kNoneEvent = 0;

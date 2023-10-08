@@ -7,6 +7,8 @@
 #include <sys/epoll.h>
 
 #include "util/error_process.h"
+#include "base/Channel.h"
+
 
 namespace xtc{
 
