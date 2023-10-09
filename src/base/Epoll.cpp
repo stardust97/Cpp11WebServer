@@ -32,7 +32,8 @@ void Epoll::AddToEpoll(Channel* channel, uint32_t events){
 }
 
 void Epoll::RemoveFromEpoll(Channel* channel){
-  epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, channel->GetFd(), NULL);   
+  epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, channel->GetFd(), NULL);
+  
 }
 
 void Epoll::ModifyEpollEvent(Channel* channel, uint32_t events){
