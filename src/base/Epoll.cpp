@@ -49,7 +49,7 @@ void Epoll::Wait(std::vector<Channel*>& active_events) {
   fill_active_channels(active_events, nfds);
 }
 
-void Epoll::fill_active_channels( std::vector<Channel*>& active_events, int32_t nums) {
+void Epoll::fill_active_channels(std::vector<Channel*>& active_events, int32_t nums) {
   for (int32_t i = 0; i < nums; i++) {
     Channel* ch = static_cast<Channel*>(events_[i].data.ptr);
     ch ->SetRevents(events_[i].events);
