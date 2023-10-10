@@ -40,13 +40,6 @@ void Channel::EnableETReading() {
   }
 }
 
-
-void Channel::set_fd_noblocked() {
-  int flags = fcntl(fd_, F_GETFL, 0);
-  flags |= O_NONBLOCK;
-  fcntl(fd_, F_SETFL, flags);
-}
-
 void Channel::DisableReading() {
 
 }
@@ -81,6 +74,10 @@ void Channel::SetErrorCallback(EventCallback const& cb) {
   error_callback_ = cb;
 }
 
-
+void Channel::set_fd_noblocked() {
+  int flags = fcntl(fd_, F_GETFL, 0);
+  flags |= O_NONBLOCK;
+  fcntl(fd_, F_SETFL, flags);
+}
 
 } // namespace xtc

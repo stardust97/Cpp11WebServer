@@ -55,6 +55,7 @@ void on_recv_msg(xtc::Channel* client_channel) {
     } 
   }
 }
+
 int main() {
   xtc::Socket* socket = new xtc::Socket();
   xtc::InetAddress addr("127.0.0.1", 8888);
@@ -78,7 +79,6 @@ int main() {
         xtc::Channel* client_channel = new xtc::Channel(epoll, client_fd);
         client_channel -> EnableETReading();
       } else if (ev -> GetActiveEvents() & EPOLLIN) { //客户端发生可读事件
-        // TODO 读取任务封装
           on_recv_msg(ev);
       } else {
         // printf("events %d TODO\n", ev.events); //TODO 其他事件的处理
