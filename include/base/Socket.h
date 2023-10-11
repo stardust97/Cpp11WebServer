@@ -17,7 +17,7 @@ public:
 
   void bind(InetAddress const& address);
   void listen();
-  int32_t accept(InetAddress& address);
+  int32_t Accept(InetAddress& address);
   int32_t const& GetFd() {return fd_;} ;
 
 

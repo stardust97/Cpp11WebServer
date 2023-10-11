@@ -29,6 +29,8 @@ public:
 
   void Wait( std::vector<xtc::Channel*>& active_events);
 
+  void UpdateChannel(Channel* channel);
+
 private:
   void fill_active_channels( std::vector<Channel*>& active_events, int32_t nums);
   

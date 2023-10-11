@@ -7,27 +7,34 @@
 #include <functional>
 #include <sys/epoll.h>
 // #include "base/Epoll.h"
+#include "base/EventLoop.h"
 
 namespace xtc{
-class Epoll;
 
 class Channel {
-  constexpr static int32_t kNoneEvent = 0;
-  constexpr static int32_t kReadEvent = EPOLLIN | EPOLLPRI;
+  constexpr static int32_t KNoneEvent = 0;
+  constexpr static int32_t KReadEvent = EPOLLIN | EPOLLPRI;
   constexpr static int32_t KETReadEvent = EPOLLIN | EPOLLPRI | EPOLLET;
-  constexpr static int32_t kWriteEvent = EPOLLOUT;
+  constexpr static int32_t KWriteEvent = EPOLLOUT;
+  constexpr static int32_t KCloseEvent = EPOLLRDHUP; // TODO 只考虑了一种情况
+  constexpr static int32_t KErrorEvent = 0; // TODO 
+
 
 public:
-  using ReadEventCallback = std::function<void ()>;
-  using EventCallback = std::function<void ()>;
+  using ReadEventCallback = std::function<void(Channel*)>;
+  using EventCallback = std::function<void()>;
 
   Channel() = delete;
-  Channel(Epoll* ep, int32_t fd);
+  Channel(EventLoop* ep, int32_t fd);
   ~Channel() = default;
 
   const int32_t& GetFd() {return fd_;};
   void SetRevents(uint32_t events);
-  uint32_t GetActiveEvents();
+  uint32_t GetActiveEvents() {return revents_;}; // 获取当前Channel发生的事件
+  uint32_t GetEvents() {return events_;}; // 获取当前Channel关心的事件
+  bool GetIsPolled() {return is_polled_;}; 
+  void HandleEvents(); //处理当前Channel发生的事件
+
 
   void EnableReading();
   void EnableETReading();
@@ -43,9 +50,9 @@ public:
   
 private:
   void set_fd_noblocked();
-
+  void update_channel_events();
   int32_t fd_; //Channel所管理的fd
-  std::shared_ptr<Epoll> epoll_; // Channel被哪个epoll所监听
+  std::shared_ptr<EventLoop> loop_; // Channel被哪个EventLoop所管理
   bool is_polled_; // 指示是否已经被加入到epoll中监听
   uint32_t events_; // 本Channel所关心的事件
   uint32_t revents_; // epoll返回的实际发生的事件

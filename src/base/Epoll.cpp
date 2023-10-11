@@ -22,6 +22,11 @@ Epoll::~Epoll() {
   }
 }
 
+void Epoll::Wait(std::vector<Channel*>& active_events) {
+  int32_t nfds = epoll_wait(epoll_fd_, events_.data(), events_.size(), -1);
+  fill_active_channels(active_events, nfds);
+}
+
 void Epoll::AddToEpoll(Channel* channel, uint32_t events){
   struct epoll_event ev;
   bzero(&ev, sizeof(struct epoll_event));
@@ -32,6 +37,7 @@ void Epoll::AddToEpoll(Channel* channel, uint32_t events){
 }
 
 void Epoll::RemoveFromEpoll(Channel* channel){
+  // TODO remove 之后可以将Channel释放掉 Channel中关闭fd
   epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, channel->GetFd(), NULL);   
 }
 
@@ -43,10 +49,13 @@ void Epoll::ModifyEpollEvent(Channel* channel, uint32_t events){
   epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, channel->GetFd(), NULL);
 }
 
-void Epoll::Wait(std::vector<Channel*>& active_events) {
-  // std::vector<int> epoll
-  int32_t nfds = epoll_wait(epoll_fd_, events_.data(), events_.size(), -1);
-  fill_active_channels(active_events, nfds);
+void Epoll::UpdateChannel(Channel* channel) {
+  uint32_t events = channel -> GetEvents();
+  if (channel -> GetIsPolled()) {
+    ModifyEpollEvent(channel, events);
+  } else {
+    AddToEpoll(channel, events);
+  }
 }
 
 void Epoll::fill_active_channels(std::vector<Channel*>& active_events, int32_t nums) {

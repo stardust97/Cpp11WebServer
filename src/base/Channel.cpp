@@ -5,43 +5,48 @@
 
 #include "base/Channel.h"
 #include "base/Epoll.h"
+#include "base/Channel.h"
 
 
 namespace xtc{  
 
-Channel::Channel(Epoll* ep, int32_t fd) :
-    epoll_(std::shared_ptr<Epoll>(ep)), fd_(fd) {
+Channel::Channel(EventLoop* ep, int32_t fd) :
+    loop_(std::shared_ptr<EventLoop>(ep)), fd_(fd), is_polled_(false) {
 
 }
 
-void Channel::SetRevents(uint32_t events){
+void Channel::SetRevents(uint32_t events) {
   revents_ = events;
 }
-uint32_t Channel::GetActiveEvents() {
-  return revents_;
+
+void Channel::HandleEvents() {
+  if (revents_ & KReadEvent) {
+    read_callback_(this);
+  } 
+  if (revents_ & KWriteEvent) {
+    write_callback_();
+  } 
+  if (revents_ & KCloseEvent) {
+    close_callback_();
+  } 
+  if (revents_ & KErrorEvent) {
+    error_callback_();
+  }
 }
 
 void Channel::EnableReading() {
-  events_ |= kReadEvent;
-  if(is_polled_) {
-    epoll_ -> ModifyEpollEvent(this, events_);
-  } else {
-    epoll_ -> AddToEpoll(this, events_);
-  }
+  events_ |= KReadEvent;
+  update_channel_events();
 }
 
 void Channel::EnableETReading() {
   events_ |= KETReadEvent;
   set_fd_noblocked();
-  if(is_polled_) {
-    epoll_ -> ModifyEpollEvent(this, events_);
-  } else {
-    epoll_ -> AddToEpoll(this, events_);
-  }
+  update_channel_events();
 }
 
 void Channel::DisableReading() {
-
+  
 }
 
 void Channel::EnableWriting() {
@@ -73,6 +78,13 @@ void Channel::SetCloseCallback(EventCallback const& cb) {
 void Channel::SetErrorCallback(EventCallback const& cb) {
   error_callback_ = cb;
 }
+
+
+void Channel::update_channel_events() {
+  loop_ -> UpdateChannel(this);
+  is_polled_ = true;
+}
+
 
 void Channel::set_fd_noblocked() {
   int flags = fcntl(fd_, F_GETFL, 0);
