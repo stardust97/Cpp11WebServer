@@ -33,7 +33,7 @@ int main(){
   serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
   int res = connect(socketfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-  xtc::errif(socketfd == -1,"connect error!\n");
+  xtc::errif(res == -1,"connect error!\n");
 
   char buf[1024];
   bzero(buf,sizeof(buf));

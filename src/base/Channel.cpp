@@ -10,8 +10,8 @@
 
 namespace xtc{  
 
-Channel::Channel(EventLoop* ep, int32_t fd) :
-    loop_(std::shared_ptr<EventLoop>(ep)), fd_(fd), is_polled_(false) {
+Channel::Channel(EventLoop* ep, int32_t fd) :fd_(fd),
+    loop_(std::shared_ptr<EventLoop>(ep)), is_polled_(false) {
 
 }
 

@@ -5,21 +5,19 @@
 #include "base/InetAddress.h"
 #include "base/Socket.h"
 #include "base/Epoll.h"
+#include "base/Acceptor.h"
 
 namespace xtc {
 
-Server::Server(EventLoop* loop) :loop_ (loop), socket_ (new Socket()) {
+Server::Server(EventLoop* loop) :loop_ (loop) {
 
+  acceptor_ = new Acceptor(loop);
+  auto cb = std::bind(&Server::on_new_connection, this, std::placeholders::_1);
+  acceptor_ -> SetAcceptCallback(cb);
 }
 
 void Server::Start() {
-  InetAddress addr("127.0.0.1", 8888);
-  socket_ -> bind(addr);
-  socket_ -> listen();
-  Channel* service_channel = new Channel(loop_, socket_->GetFd()); // BUG 内存泄漏
-  service_channel->EnableReading(); //阻塞 LT模式
-  service_channel -> SetReadCallback(std::bind(&Server::on_new_connection, this, std::placeholders::_1));
-  printf("server start\n");
+  
 }
 
 Server::~Server() {
@@ -27,11 +25,10 @@ Server::~Server() {
 
 }
 
-// 目前ch没有用处，只是为了统一新消息和新链接的接口
-void Server::on_new_connection(Channel* ch) {
-  InetAddress addr;
-  int32_t client_fd = socket_->Accept(addr); 
-  auto& client_addr = addr.GetAddr();
+void Server::on_new_connection(Socket* socket) {
+  InetAddress cli_addr;
+  int32_t client_fd = socket->Accept(cli_addr);
+  auto& client_addr = cli_addr.GetAddr();
   printf("new client fd %d! IP: %s Port: %d\n", client_fd, 
       inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
   Channel* client_channel = new xtc::Channel(loop_, client_fd); // BUG 当前存在内存泄漏
