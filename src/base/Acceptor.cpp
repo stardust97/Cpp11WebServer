@@ -4,19 +4,20 @@ namespace xtc {
   
 
 Acceptor::Acceptor(EventLoop *loop):loop_(loop), socket_(nullptr),
-    channel_(nullptr), address_(nullptr) {
+    accept_channel_(nullptr) {
   socket_ = new Socket();
-  address_ = new InetAddress("127.0.0.1", 8888);
-  socket_ -> bind(*address_);
+  InetAddress address ("127.0.0.1", 8888);
+  socket_ -> bind(address);
   socket_ -> listen();
-  Channel* service_channel = new Channel(loop_, socket_->GetFd()); // BUG 内存泄漏
-  service_channel->EnableReading(); //阻塞 LT模式
-  service_channel -> SetReadCallback(std::bind(&Acceptor::on_accept_new_connection, this));
+  accept_channel_ = new Channel(loop_, socket_->GetFd());
+  accept_channel_ -> EnableReading(); //阻塞 LT模式
+  accept_channel_ -> SetReadCallback(std::bind(&Acceptor::on_accept_new_connection, this));
   printf("ready to accept \n");
 }
 
 Acceptor::~Acceptor() {
-
+  delete socket_;
+  delete accept_channel_;
 }
 
 void Acceptor::SetAcceptCallback(NewConnectionCallback const& cb) {

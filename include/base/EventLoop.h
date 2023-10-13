@@ -10,7 +10,7 @@ public:
   ~EventLoop();
   void Loop();
   void UpdateChannel(Channel* channel);
-
+  void DisableChannel(Channel* channel);
 private:
   Epoll *ep_;
   bool quit_;

@@ -33,6 +33,7 @@ void Epoll::AddToEpoll(Channel* channel, uint32_t events){
   ev.events = events;
   // NOTE 这里使用ptr来记录发生事件的Channel，而不是fd
   ev.data.ptr = static_cast<void*> (channel);
+  printf("fd %d polled, events: %d\n", channel->GetFd(), channel->GetEvents());
   epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, channel->GetFd(), &ev);   
 }
 

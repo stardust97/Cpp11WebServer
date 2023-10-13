@@ -7,13 +7,13 @@
 #include "base/Epoll.h"
 #include "base/Acceptor.h"
 
+
 namespace xtc {
 
 Server::Server(EventLoop* loop) :loop_ (loop) {
-
   acceptor_ = new Acceptor(loop);
-  auto cb = std::bind(&Server::on_new_connection, this, std::placeholders::_1);
-  acceptor_ -> SetAcceptCallback(cb);
+  auto new_connect_callback = std::bind(&Server::on_new_connection, this, std::placeholders::_1);
+  acceptor_ -> SetAcceptCallback(new_connect_callback);
 }
 
 void Server::Start() {
@@ -21,8 +21,7 @@ void Server::Start() {
 }
 
 Server::~Server() {
-  //TODO:
-
+  delete acceptor_;
 }
 
 void Server::on_new_connection(Socket* socket) {
@@ -31,34 +30,18 @@ void Server::on_new_connection(Socket* socket) {
   auto& client_addr = cli_addr.GetAddr();
   printf("new client fd %d! IP: %s Port: %d\n", client_fd, 
       inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-  Channel* client_channel = new xtc::Channel(loop_, client_fd); // BUG 当前存在内存泄漏
-  client_channel -> EnableETReading();
-  client_channel -> SetReadCallback(std::bind(&Server::on_new_message, this, std::placeholders::_1));
+  Connection* conn = new Connection(loop_, client_fd);
+  // TODO 关闭连接的回调函数可以用Channel中的CloseCallback
+  conn ->SetDisconnectCallback(std::bind(&Server::on_close_connection, this, std::placeholders::_1));
+  connections_.insert(std::make_pair(socket->GetFd(), conn));
 }
 
-void Server::on_new_message(Channel* ch) {
-  printf("client has new msg\n");
-  char buf[KMaxBufSize];
-  while (true) { // ET模式需要一次性读出所有数据
-    bzero(buf, KMaxBufSize);
-    int32_t client_fd =  ch -> GetFd();
-    int32_t read_bytes = read(client_fd, buf, KMaxBufSize);
-    if(read_bytes > 0) {
-      printf("client fd: %d, recv msg: %s\n", client_fd, buf);
-    } else if(read_bytes == 0) {  //EOF，客户端断开连接
-      printf("EOF, client fd %d disconnected\n", client_fd);
-      // 当close是真的释放了文件描述符资源，而不是减少文件描述的引用计数的话，就会自动从epoll 监听文件描述符集合中删除。
-      close(client_fd); 
-      break;
-    } else if(read_bytes == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK))){
-      //非阻塞IO，这个条件表示本次数据全部读取完毕
-      printf("client %d read finished!\n", client_fd);
-      break;
-    } else if(read_bytes == -1 && errno == EINTR){  //客户端正常中断、继续读取
-      printf("need next read\n");
-      break;
-    } 
-  }
+void Server::on_close_connection(Channel* ch) {
+  Connection* conn = connections_[ch->GetFd()];
+  connections_.erase(ch->GetFd());
+  delete conn;
 }
+
+
 
 } // namespace xtc

@@ -13,7 +13,7 @@
 // C标准库
 #include <cstring>
 // 系统库
-#include <arpa/inet.h>  //这个头文件包含了<netinet/in.h>，不用再次包含了
+#include <arpa/inet.h>
 #include <unistd.h>
 // 其他
 #include "util/error_process.h"
@@ -37,7 +37,7 @@ int main(){
 
   char buf[1024];
   bzero(buf,sizeof(buf));
-  for(int i = 0; i < 200; ++i){
+  for(int i = 0; i < 20000; ++i){
     snprintf(buf,sizeof(buf), "hello id: %d", i);
     int write_bytes = write(socketfd, buf,sizeof(buf));
     if(write_bytes > 0) {

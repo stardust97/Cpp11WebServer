@@ -15,7 +15,6 @@
 int main() {
   xtc::EventLoop* loop = new xtc::EventLoop();
   xtc::Server* server = new xtc::Server(loop);
-  server ->Start();
   loop -> Loop();
   return 0;
 }

@@ -20,12 +20,12 @@ class Channel {
 
 
 public:
-  using ReadEventCallback = std::function<void(Channel*)>;
+  using ReadEventCallback = std::function<void()>;
   using EventCallback = std::function<void()>;
 
   Channel() = delete;
   Channel(EventLoop* ep, int32_t fd);
-  ~Channel() = default;
+  ~Channel();
 
   const int32_t& GetFd() {return fd_;};
   void SetRevents(uint32_t events);

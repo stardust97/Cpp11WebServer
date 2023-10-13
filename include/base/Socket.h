@@ -13,7 +13,7 @@ class Socket {
 public:
   Socket();
   Socket(InetAddress const& address);
-  ~Socket() = default;
+  ~Socket();
 
   void bind(InetAddress const& address);
   void listen();

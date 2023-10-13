@@ -10,9 +10,16 @@
 
 namespace xtc{  
 
-Channel::Channel(EventLoop* ep, int32_t fd) :fd_(fd),
-    loop_(std::shared_ptr<EventLoop>(ep)), is_polled_(false) {
+Channel::Channel(EventLoop* loop, int32_t fd) :fd_(fd),
+    loop_(std::shared_ptr<EventLoop>(loop)), is_polled_(false),events_(0), revents_(0) {
 
+}
+
+Channel::~Channel() {
+  if(is_polled_) {
+    loop_ -> DisableChannel(this);
+  }
+  close(fd_);
 }
 
 void Channel::SetRevents(uint32_t events) {
@@ -21,7 +28,8 @@ void Channel::SetRevents(uint32_t events) {
 
 void Channel::HandleEvents() {
   if (revents_ & KReadEvent) {
-    read_callback_(this);
+    printf("read events occur,channel fd is: %d, concerned event is %d\n", fd_, events_);
+    read_callback_();
   } 
   if (revents_ & KWriteEvent) {
     write_callback_();
@@ -66,8 +74,6 @@ void Channel::SetReadCallback(ReadEventCallback const& cb) {
 }
 
 void Channel::SetWriteCallback(EventCallback const& cb) {
-
-
   write_callback_ = cb;
 }
 

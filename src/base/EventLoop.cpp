@@ -6,12 +6,12 @@
 
 namespace xtc{
 
-EventLoop::EventLoop(): ep_(new Epoll()), quit_(false) {
-
+EventLoop::EventLoop(): ep_(nullptr), quit_(false) {
+  ep_ = new Epoll();
 }
 
 EventLoop::~EventLoop() {
-  // TODO 释放ep_
+  delete ep_;
 }
 
 void EventLoop::Loop() {
@@ -29,7 +29,9 @@ void EventLoop::UpdateChannel(Channel* ch) {
 }
 
 
-
+void EventLoop::DisableChannel(Channel* channel) {
+  ep_ -> RemoveFromEpoll(channel); //
+}
 
 
 } // namespace xtc
