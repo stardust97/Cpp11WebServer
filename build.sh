@@ -12,5 +12,7 @@ cmake ..
 make -j4
 echo "Build Done"
 
+
+
 cd $DIR
 
