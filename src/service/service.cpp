@@ -10,17 +10,17 @@
 
 #include "base/EventLoop.h"
 #include "base/Server.h"
-#include <log4cxx/logger.h>
-#include <log4cxx/basicconfigurator.h>
-#include <log4cxx/propertyconfigurator.h>
+// #include <log4cxx/logger.h>
+// #include <log4cxx/basicconfigurator.h>
+// #include <log4cxx/propertyconfigurator.h>
 // #include <log4cxx/helpers/exception.h>
 // #include <log4cxx/log4cxx.h>
 
 int main() {
 
-  log4cxx::PropertyConfigurator::configure("conf/log4cxx.properties");
-  log4cxx::LoggerPtr logger(log4cxx::Logger::getRootLogger());
-  LOG4CXX_INFO(logger, "this is log4cxx test");
+  // log4cxx::PropertyConfigurator::configure("conf/log4cxx.properties");
+  // log4cxx::LoggerPtr logger(log4cxx::Logger::getRootLogger());
+  // LOG4CXX_INFO(logger, "this is log4cxx test");
   xtc::EventLoop* loop = new xtc::EventLoop();
   xtc::Server* server = new xtc::Server(loop);
   loop -> Loop();

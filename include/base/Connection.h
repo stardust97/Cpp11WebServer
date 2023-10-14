@@ -5,6 +5,8 @@
 
 #include "base/Channel.h"
 #include "base/EventLoop.h"
+#include "base/Buffer.h"
+
 namespace xtc {
 class Connection {
   using DisConnectCallback = std::function<void(Channel*)>;
@@ -20,6 +22,7 @@ private:
   constexpr static int32_t KMaxBufSize = 1024;
   EventLoop* loop_;
   Channel* ch_; // 客户端连接的Channel
+  Buffer* read_buf_;
   DisConnectCallback dis_conn_callback_;
 };
 
