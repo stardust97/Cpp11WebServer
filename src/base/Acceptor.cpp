@@ -21,7 +21,7 @@ Acceptor::~Acceptor() {
 }
 
 void Acceptor::SetAcceptCallback(NewConnectionCallback const& cb) {
-  LOG4CXX_DEBUG(Logger::GetLogger(), "accept channel " << accept_channel_ << " register new connection callback");
+  LOG4CXX_DEBUG(Logger::GetLogger(), "accept channel " << accept_channel_->GetFd() << " register new connection callback");
   callback_ = cb;
 }
 

@@ -23,8 +23,8 @@ Channel::~Channel() {
 }
 
 void Channel::SetRevents(uint32_t events) {
-  LOG4CXX_INFO(Logger::GetLogger(), "read events occur,channel fd is " << fd_ << " concerned event is " << events_);
   revents_ = events;
+  LOG4CXX_TRACE(Logger::GetLogger(), "set Revents,channel fd is " << fd_ << " concerned event is " << events_);
 }
 
 void Channel::HandleEvents() {
