@@ -6,7 +6,7 @@
 #include "base/Channel.h"
 #include "base/Epoll.h"
 #include "base/Channel.h"
-
+#include "util/Logger.h"
 
 namespace xtc{  
 
@@ -23,12 +23,12 @@ Channel::~Channel() {
 }
 
 void Channel::SetRevents(uint32_t events) {
+  LOG4CXX_INFO(Logger::GetLogger(), "read events occur,channel fd is " << fd_ << " concerned event is " << events_);
   revents_ = events;
 }
 
 void Channel::HandleEvents() {
   if (revents_ & KReadEvent) {
-    printf("read events occur,channel fd is: %d, concerned event is %d\n", fd_, events_);
     read_callback_();
   } 
   if (revents_ & KWriteEvent) {
@@ -43,11 +43,13 @@ void Channel::HandleEvents() {
 }
 
 void Channel::EnableReading() {
+  LOG4CXX_INFO(Logger::GetLogger(), "Channel fd "<< fd_ << " enable reading");
   events_ |= KReadEvent;
   update_channel_events();
 }
 
 void Channel::EnableETReading() {
+  LOG4CXX_INFO(Logger::GetLogger(), "Channel enable ET reading");
   events_ |= KETReadEvent;
   set_fd_noblocked();
   update_channel_events();
@@ -70,6 +72,7 @@ void Channel::DisableAll() {
 }
 
 void Channel::SetReadCallback(ReadEventCallback const& cb) {
+  LOG4CXX_DEBUG(Logger::GetLogger(), "channel fd "<< fd_ << " register read callback");
   read_callback_ = cb;
 }
 

@@ -8,12 +8,14 @@
 
 #include "util/error_process.h"
 #include "base/Channel.h"
-
+#include "util/Logger.h"
 
 namespace xtc{
 
 Epoll::Epoll(): epoll_fd_(epoll_create1(0)), events_(kInitEventListSize) {
-  errif(epoll_fd_ == -1, "epoll_create failed");
+  if(epoll_fd_ == -1 ) {
+    LOG4CXX_ERROR(Logger::GetLogger(), "epoll create failed");
+  }
 }
 
 Epoll::~Epoll() {
@@ -33,16 +35,19 @@ void Epoll::AddToEpoll(Channel* channel, uint32_t events){
   ev.events = events;
   // NOTE 这里使用ptr来记录发生事件的Channel，而不是fd
   ev.data.ptr = static_cast<void*> (channel);
-  printf("fd %d polled, events: %d\n", channel->GetFd(), channel->GetEvents());
+  LOG4CXX_DEBUG(Logger::GetLogger(), " client fd: " << channel->GetFd() << " add to epoll, events: " \
+      << channel->GetEvents());
   epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, channel->GetFd(), &ev);   
 }
 
 void Epoll::RemoveFromEpoll(Channel* channel){
-  // TODO remove 之后可以将Channel释放掉 Channel中关闭fd
-  epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, channel->GetFd(), NULL);   
+  LOG4CXX_INFO(Logger::GetLogger(), " client fd: " << channel->GetFd() << " remove from epoll ");
+  epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, channel->GetFd(), NULL);
 }
 
 void Epoll::ModifyEpollEvent(Channel* channel, uint32_t events){
+  LOG4CXX_INFO(Logger::GetLogger(), " client fd: " << channel->GetFd() << " modify to epoll, events: " \
+      << channel->GetEvents());
   struct epoll_event ev;
   bzero(&ev, sizeof(struct epoll_event));
   ev.events = events;
@@ -51,6 +56,8 @@ void Epoll::ModifyEpollEvent(Channel* channel, uint32_t events){
 }
 
 void Epoll::UpdateChannel(Channel* channel) {
+  LOG4CXX_INFO(Logger::GetLogger(), " client fd: " << channel->GetFd() << " uptate to epoll, events: " \
+      << channel->GetEvents());
   uint32_t events = channel -> GetEvents();
   if (channel -> GetIsPolled()) {
     ModifyEpollEvent(channel, events);

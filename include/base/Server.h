@@ -25,7 +25,6 @@ private:
 
 
 private:
-
   EventLoop* loop_; // 事件循环
   Acceptor* acceptor_; // 用于分发新连接的连接器
   ConnectionList connections_; // 保存当前建立的客户端连接，key为fd，valu为连接

@@ -6,6 +6,7 @@
 #include "base/Socket.h"
 #include "base/Epoll.h"
 #include "base/Acceptor.h"
+#include "util/Logger.h"
 
 
 namespace xtc {
@@ -28,8 +29,8 @@ void Server::on_new_connection(Socket* socket) {
   InetAddress cli_addr;
   int32_t client_fd = socket->Accept(cli_addr);
   auto& client_addr = cli_addr.GetAddr();
-  printf("new client fd %d! IP: %s Port: %d\n", client_fd, 
-      inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+  LOG4CXX_INFO(Logger::GetLogger(), " client fd: " << client_fd << " ip: " \
+      << inet_ntoa(client_addr.sin_addr) << " port: " << ntohs(client_addr.sin_port));
   Connection* conn = new Connection(loop_, client_fd);
   // TODO 关闭连接的回调函数可以用Channel中的CloseCallback
   conn ->SetDisconnectCallback(std::bind(&Server::on_close_connection, this, std::placeholders::_1));
