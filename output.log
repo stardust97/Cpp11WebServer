@@ -1,0 +1,8 @@
+[INFO ] 2023-10-16 14:27:40,152(3) --> [0x7f949faccfc0] /home/xutiancheng/test/Cpp11WebServer/src/service/service.cpp(18): server start   
+[INFO ] 2023-10-16 14:27:40,152(3) --> [0x7f949faccfc0] /home/xutiancheng/test/Cpp11WebServer/src/base/Channel.cpp(46): Channel fd 5 enable reading  
+[INFO ] 2023-10-16 14:27:40,153(3) --> [0x7f949faccfc0] /home/xutiancheng/test/Cpp11WebServer/src/base/Epoll.cpp(59):  client fd: 5 uptate to epoll, events: 3  
+[DEBUG] 2023-10-16 14:27:40,153(3) --> [0x7f949faccfc0] /home/xutiancheng/test/Cpp11WebServer/src/base/Epoll.cpp(38):  client fd: 5 add to epoll, events: 3  
+[DEBUG] 2023-10-16 14:27:40,153(3) --> [0x7f949faccfc0] /home/xutiancheng/test/Cpp11WebServer/src/base/Channel.cpp(75): channel fd 5 register read callback  
+[INFO ] 2023-10-16 14:27:40,153(3) --> [0x7f949faccfc0] /home/xutiancheng/test/Cpp11WebServer/src/base/Acceptor.cpp(15): start to accept  
+[DEBUG] 2023-10-16 14:27:40,153(4) --> [0x7f949faccfc0] /home/xutiancheng/test/Cpp11WebServer/src/base/Acceptor.cpp(24): accept channel 0x559375f612d0 register new connection callback  
+[INFO ] 2023-10-16 14:27:40,153(4) --> [0x7f949faccfc0] /home/xutiancheng/test/Cpp11WebServer/src/base/EventLoop.cpp(19): start to loop  
