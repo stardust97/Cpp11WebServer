@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "base/Channel.h"
+#include "util/Logger.h"
 
 namespace xtc{
 
@@ -15,6 +16,7 @@ EventLoop::~EventLoop() {
 }
 
 void EventLoop::Loop() {
+  LOG4CXX_INFO(Logger::GetLogger(), "start to loop");
   while (!quit_) {
     std::vector<Channel*> active_events;
     ep_ -> Wait(active_events);
