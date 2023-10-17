@@ -7,12 +7,15 @@
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 
+#include <filesystem>
+#include <iostream>
 
 #include "base/EventLoop.h"
 #include "base/Server.h"
 #include "util/Logger.h"
 
 int main() {
+  std::cout << std::filesystem::current_path() << std::endl;
   xtc::Logger logger = xtc::Logger::GetInstance();
   logger.Init("conf/log4cxx.properties");
   LOG4CXX_INFO(xtc::Logger::GetLogger(), "server start ");

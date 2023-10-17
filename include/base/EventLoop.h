@@ -2,6 +2,7 @@
 #define __XTC__EVENTLOOP__H__
 
 #include "base/Epoll.h"
+#include "base/ThreadPool.h"
 
 namespace xtc{
 class EventLoop {
@@ -13,7 +14,9 @@ public:
   void DisableChannel(Channel* channel);
 private:
   Epoll *ep_;
+  ThreadPool* pool_;
   bool quit_;
+
 
 };
 
