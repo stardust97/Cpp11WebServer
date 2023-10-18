@@ -24,10 +24,8 @@ void EventLoop::Loop() {
     ep_ -> Wait(active_events);
     for (Channel* ch : active_events) {
       LOG4CXX_DEBUG(Logger::GetLogger(), "fd " << ch->GetFd() << "occur events: " << ch->GetEvents());
-      std::function<void(void)> t = std::bind(&Channel::HandleEvents, ch);
-      LOG4CXX_DEBUG(Logger::GetLogger(), "start to add task");
+      ch ->HandleEvents();
 
-      pool_ -> AddTask(t);
     }
   }
 }
@@ -41,5 +39,8 @@ void EventLoop::DisableChannel(Channel* channel) {
   ep_ -> RemoveFromEpoll(channel); //
 }
 
+void EventLoop::AddToPool(Task const &task){
+  pool_ -> AddTask(task);
+}
 
 } // namespace xtc

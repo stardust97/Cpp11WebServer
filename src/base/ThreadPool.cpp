@@ -19,13 +19,6 @@ ThreadPool::~ThreadPool() {
 
 }
 
-void ThreadPool::AddTask(Task const& task) {
-  {
-    std::unique_lock<std::mutex> lock(mutex_);
-    tasks_.push(task);
-  }
-  cv_.notify_one();
-}
 
 void ThreadPool::work() {
   while(!stopped_) {
