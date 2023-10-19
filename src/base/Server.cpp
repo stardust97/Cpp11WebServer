@@ -11,10 +11,18 @@
 
 namespace xtc {
 
-Server::Server(EventLoop* loop) :loop_ (loop) {
+Server::Server(EventLoop* loop) :main_reactor_ (loop), acceptor_ (nullptr), pool_(nullptr){
   acceptor_ = new Acceptor(loop);
   auto new_connect_callback = std::bind(&Server::on_new_connection, this, std::placeholders::_1);
   acceptor_ -> SetAcceptCallback(new_connect_callback);
+
+  int32_t thread_num = std::thread::hardware_concurrency();
+  pool_ = new ThreadPool(thread_num);
+  // sub_reactor_ = std::vector<EventLoop*> (thread_num);  //BUG 这样初始化sub_reactor_会导致EventLoop为空指针
+  for(int32_t i = 0; i < thread_num;++i) { //subReactor个数和线程池个数一致
+    sub_reactor_.push_back(new EventLoop());
+    pool_ -> AddTask(std::bind(&EventLoop::Loop, sub_reactor_[i]) );
+  }
 }
 
 void Server::Start() {
@@ -23,6 +31,11 @@ void Server::Start() {
 
 Server::~Server() {
   delete acceptor_;
+  delete pool_; // MARK 先delete pool_ 否则会导致执行空指针？
+  for (size_t i = 0; i < sub_reactor_.size(); ++i) {
+    delete sub_reactor_[i];
+  }
+
 }
 
 void Server::on_new_connection(Socket* socket) {
@@ -31,7 +44,8 @@ void Server::on_new_connection(Socket* socket) {
   auto& client_addr = cli_addr.GetAddr();
   LOG4CXX_INFO(Logger::GetLogger(), " client fd: " << client_fd << " ip: " \
       << inet_ntoa(client_addr.sin_addr) << " port: " << ntohs(client_addr.sin_port));
-  Connection* conn = new Connection(loop_, client_fd);
+  int32_t random = client_fd % sub_reactor_.size(); // 当前使用简单的哈希算法实现负载分配
+  Connection* conn = new Connection(sub_reactor_[random], client_fd);
   // TODO 关闭连接的回调函数可以用Channel中的CloseCallback
   conn ->SetDisconnectCallback(std::bind(&Server::on_close_connection, this, std::placeholders::_1));
   connections_.insert(std::make_pair(socket->GetFd(), conn));

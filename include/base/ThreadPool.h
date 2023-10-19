@@ -25,6 +25,7 @@ public:
 
 private:
   void work();
+  
   int32_t thread_nums_;
   std::vector<std::thread> threads_;
   std::queue<Task> tasks_;

@@ -1,7 +1,7 @@
 #include "base/Acceptor.h"
 #include "util/Logger.h"
+
 namespace xtc {
-  
 
 Acceptor::Acceptor(EventLoop *loop):loop_(loop), socket_(nullptr),
     accept_channel_(nullptr) {
@@ -21,7 +21,8 @@ Acceptor::~Acceptor() {
 }
 
 void Acceptor::SetAcceptCallback(NewConnectionCallback const& cb) {
-  LOG4CXX_DEBUG(Logger::GetLogger(), "accept channel " << accept_channel_->GetFd() << " register new connection callback");
+  LOG4CXX_DEBUG(Logger::GetLogger(), "accept channel " << accept_channel_->GetFd() 
+      << " register new connection callback");
   callback_ = cb;
 }
 

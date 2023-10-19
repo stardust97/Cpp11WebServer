@@ -6,6 +6,7 @@ namespace xtc{
 ThreadPool::ThreadPool(int32_t thread_num) : 
     thread_nums_(thread_num) {
   threads_ = std::vector<std::thread>(thread_nums_); //TODO move
+  LOG4CXX_INFO(Logger::GetLogger(), "create threads");
   for (int i = 0; i< thread_nums_; ++i) {
     threads_[i] = std::thread(std::bind(&ThreadPool::work, this));
   }
@@ -16,13 +17,15 @@ ThreadPool::~ThreadPool() {
   stopped_ = true;
   for(auto& thread: threads_) {
     thread.join();
+    LOG4CXX_DEBUG(Logger::GetLogger(), "thread joined");
   }
 
 }
 
 
 void ThreadPool::work() {
-  while(!stopped_) {
+  LOG4CXX_INFO(Logger::GetLogger(), "work start");
+  while(!stopped_) { // TODO loop为死循环，无法退出
     Task task;
     {
       std::unique_lock<std::mutex> lock(mutex_);
@@ -32,6 +35,7 @@ void ThreadPool::work() {
       task = tasks_.front();
       tasks_.pop();
     }
+    LOG4CXX_DEBUG(Logger::GetLogger(), "task start");
     task();
   }
 

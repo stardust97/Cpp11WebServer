@@ -7,6 +7,7 @@
 #include "base/Socket.h"
 #include "base/Acceptor.h"
 #include "base/Connection.h"
+#include "base/ThreadPool.h"
 
 namespace xtc{
 
@@ -25,9 +26,14 @@ private:
 
 
 private:
-  EventLoop* loop_; // 事件循环
+  EventLoop* main_reactor_; // 负责新链接的接收并将其分发给subReactor
   Acceptor* acceptor_; // 用于分发新连接的连接器
+  ThreadPool* pool_; // 线程池 subReactor 在线程池中处理客户端事件
   ConnectionList connections_; // 保存当前建立的客户端连接，key为fd，valu为连接
+  std::vector<EventLoop*> sub_reactor_; // 负责客户端的请求
+
+
+
 };
 
 

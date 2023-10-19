@@ -28,26 +28,6 @@ void Channel::SetRevents(uint32_t events) {
 }
 
 void Channel::HandleEvents() {
-  if(revents_ & EPOLLET) {
-    // ET模式下使用线程池处理任务
-    std::function<void(void)> t;
-    if (revents_ & KReadEvent) {
-      t = std::bind(&Channel::read_callback_, this);
-    } 
-    if (revents_ & KWriteEvent) {
-      t = std::bind(&Channel::write_callback_, this);
-    } 
-    if (revents_ & KCloseEvent) {
-      t = std::bind(&Channel::close_callback_, this);
-    } 
-    if (revents_ & KErrorEvent) {
-      t = std::bind(&Channel::error_callback_, this);
-    }
-    loop_ -> AddToPool(t);
-    return;
-  }
-
-  // LT模式下使用主线程处理任务（Acceptor）
   if (revents_ & KReadEvent) {
     read_callback_();
   } 

@@ -12,11 +12,9 @@ public:
   void Loop();
   void UpdateChannel(Channel* channel);
   void DisableChannel(Channel* channel);
-  void AddToPool(Task const& task);
   
 private:
   Epoll *ep_;
-  ThreadPool* pool_;
   bool quit_;
 
 

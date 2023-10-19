@@ -39,7 +39,7 @@ void Connection::on_new_message() {
       break;
     } else if(read_bytes == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK))){
       //非阻塞IO，这个条件表示本次数据全部读取完毕
-      LOG4CXX_DEBUG(Logger::GetLogger(), ", client fd: " << client_fd << " recv msg: " << read_buf_->GetStr() );
+      LOG4CXX_TRACE(Logger::GetLogger(), ", client fd: " << client_fd << " recv msg: " << read_buf_->GetStr() );
       printf("client fd: %d, recv msg: %s\n", client_fd, read_buf_->GetStr());
       read_buf_ -> Clear();
       break;
