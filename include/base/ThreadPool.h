@@ -17,11 +17,11 @@ namespace xtc{
 class ThreadPool {
 
 public:
-  ThreadPool();
+  ThreadPool(int32_t thread_num = std::thread::hardware_concurrency());
   ~ThreadPool();
 
   template<typename F, typename ... Args>
-  auto AddTask(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>;
+  auto AddTask(F&& f, Args&&... args) -> std::future<typename std::result_of_t<F(Args...)>>;
 
 private:
   void work();
@@ -34,8 +34,8 @@ private:
 };
 
   template<typename F, typename ... Args>
-  auto ThreadPool::AddTask(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type> {
-    using return_type = typename std::result_of<F(Args...)>::type;  //返回值类型
+  auto ThreadPool::AddTask(F&& f, Args&&... args) -> std::future<typename std::result_of_t<F(Args...)>> {
+    using return_type = typename std::result_of_t<F(Args...)>;  //返回值类型
     auto task = std::make_shared<std::packaged_task<return_type()> > ( 
         std::bind(std::forward<F>(f), std::forward<Args>(args)...)    // 完美转发参数
     );

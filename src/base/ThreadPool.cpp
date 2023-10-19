@@ -3,7 +3,8 @@
 
 
 namespace xtc{
-ThreadPool::ThreadPool() :  thread_nums_(std::thread::hardware_concurrency()) {
+ThreadPool::ThreadPool(int32_t thread_num) : 
+    thread_nums_(thread_num) {
   threads_ = std::vector<std::thread>(thread_nums_); //TODO move
   for (int i = 0; i< thread_nums_; ++i) {
     threads_[i] = std::thread(std::bind(&ThreadPool::work, this));
