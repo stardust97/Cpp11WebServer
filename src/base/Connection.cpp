@@ -6,15 +6,22 @@
 #include "util/Logger.h"
 
 namespace xtc{
-Connection::Connection(EventLoop* loop, int32_t fd):loop_(loop), ch_(nullptr),read_buf_(nullptr) {
-  read_buf_ = new Buffer();
-  ch_ = new xtc::Channel(loop_, fd);
+Connection::Connection(EventLoop* loop, int32_t fd):loop_(loop), ch_(nullptr),
+    read_buf_(nullptr), write_buf_(nullptr), state_(ConnState::CONNECTED){
+  read_buf_ = std::make_unique<Buffer>();
+  write_buf_ = std::make_unique<Buffer>();
+  ch_ = std::make_unique<Channel>(loop_, fd);
   ch_ -> EnableETReading();
-  ch_ -> SetReadCallback(std::bind(&Connection::on_new_message, this));
+
 }
 
 Connection::~Connection() {
-  delete ch_;
+  LOG4CXX_INFO(Logger::GetLogger(), "connection closed");
+}
+
+void Connection::SetNewMsgCallback(NewMsgCallback cb) {
+  new_msg_callback_ = cb;
+  ch_ -> SetReadCallback([this] () {new_msg_callback_(this);}); //MARK 
 }
 
 void Connection::SetDisconnectCallback(DisConnectCallback cb) {
@@ -22,33 +29,70 @@ void Connection::SetDisconnectCallback(DisConnectCallback cb) {
   dis_conn_callback_ = cb;
 }
 
+void Connection::Read() {
+  if (ch_ ->GetIsBlocked()) {
+    blocked_read();
+  } else {
+    no_blocked_read();
+  }
+}
 
-void Connection::on_new_message() {
+void Connection::Close() {
+  dis_conn_callback_(ch_.get());
+}
+
+void Connection::blocked_read() {
+  read_buf_ -> Clear();
   char buf[KMaxBufSize];
-  while (true) { // ET模式需要一次性读出所有数据
-    bzero(buf, KMaxBufSize);
-    int32_t client_fd =  ch_ -> GetFd();
+  bzero(buf, KMaxBufSize);
+  int32_t read_bytes = read(ch_ ->GetFd(), buf, KMaxBufSize);
+  if(read_bytes > 0) {
+    LOG4CXX_DEBUG(Logger::GetLogger(), ", client fd: " <<ch_ ->GetFd() << " read bytes: " << read_bytes); 
+    read_buf_ ->Append(buf, read_bytes);
+  } else if (read_bytes == -1) {
+    state_ = ConnState::CLOSED;
+    LOG4CXX_FATAL(Logger::GetLogger(), ", client fd: " <<ch_ ->GetFd() << " read failed: " << errno);
+  }
+}
+
+void Connection::no_blocked_read() {
+  read_buf_ -> Clear();
+  char buf[KMaxBufSize];
+  while (true) {// ET非阻塞模式需要一次性读出所有数据
+    int32_t client_fd = ch_ -> GetFd();
     int32_t read_bytes = read(client_fd, buf, KMaxBufSize);
     if(read_bytes > 0) {
       read_buf_ ->Append(buf, read_bytes);
     } else if(read_bytes == 0) {  //EOF，客户端主动断开连接
       LOG4CXX_INFO(Logger::GetLogger(), "EOF, client fd " << client_fd << " disconnected");
-      // 当close是真的释放了文件描述符资源，而不是减少文件描述的引用计数的话，就会自动从epoll 监听文件描述符集合中删除。
-      // close(client_fd); 
-      dis_conn_callback_(ch_); //从Server中移除此Connection，释放此Connection资源
+      state_ = ConnState::CLOSED;
       break;
     } else if(read_bytes == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK))){
       //非阻塞IO，这个条件表示本次数据全部读取完毕
       LOG4CXX_TRACE(Logger::GetLogger(), ", client fd: " << client_fd << " recv msg: " << read_buf_->GetStr() );
-      printf("client fd: %d, recv msg: %s\n", client_fd, read_buf_->GetStr());
-      read_buf_ -> Clear();
       break;
     } else if(read_bytes == -1 && errno == EINTR){  //客户端正常中断、继续读取
-      LOG4CXX_DEBUG(Logger::GetLogger(), ", client fd: " << client_fd << " EINTR" );
+      LOG4CXX_DEBUG(Logger::GetLogger(), ", client fd: " << client_fd << " EINTR" ); //MARK 未显示？
       break;
     } 
   }
 }
+
+void Connection::Write() {
+
+}
+
+void Connection::blockedWrite() {
+
+}
+
+void Connection::no_blocked_write() {
+
+}
+
+
+
+
 
 
 } // namespace xtc
