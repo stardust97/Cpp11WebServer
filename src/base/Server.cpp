@@ -8,7 +8,6 @@
 #include "base/Acceptor.h"
 #include "util/Logger.h"
 
-
 namespace xtc {
 
 Server::Server(EventLoop* loop) :main_reactor_ (loop), acceptor_ (nullptr), pool_(nullptr){
@@ -46,6 +45,7 @@ void Server::on_new_connection(Socket* socket) {
       << inet_ntoa(client_addr.sin_addr) << " port: " << ntohs(client_addr.sin_port));
   int32_t random = client_fd % sub_reactor_.size(); // 当前使用简单的哈希算法实现负载分配
   Connection* conn = new Connection(sub_reactor_[random], client_fd);
+  conn -> SetNewMsgCallback(on_connect_callback_);
   // TODO 关闭连接的回调函数可以用Channel中的CloseCallback
   conn ->SetDisconnectCallback(std::bind(&Server::on_close_connection, this, std::placeholders::_1));
   connections_.insert(std::make_pair(socket->GetFd(), conn));

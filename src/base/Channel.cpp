@@ -10,8 +10,8 @@
 
 namespace xtc{  
 
-Channel::Channel(EventLoop* loop, int32_t fd) :fd_(fd),
-    loop_(std::shared_ptr<EventLoop>(loop)), is_polled_(false),events_(0), revents_(0) {
+Channel::Channel(EventLoop* loop, int32_t fd) :fd_(fd), is_blocked_(true), 
+    loop_(loop), is_polled_(false),events_(0), revents_(0) {
 
 }
 
@@ -99,6 +99,7 @@ void Channel::set_fd_noblocked() {
   int flags = fcntl(fd_, F_GETFL, 0);
   flags |= O_NONBLOCK;
   fcntl(fd_, F_SETFL, flags);
+  is_blocked_ = false;
 }
 
 } // namespace xtc

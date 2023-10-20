@@ -1,8 +1,6 @@
 #ifndef __XTC__CHANNEL__H__
 #define __XTC__CHANNEL__H__
 
-
-
 #include <memory>
 #include <functional>
 #include <sys/epoll.h>
@@ -32,8 +30,8 @@ public:
   uint32_t GetActiveEvents() {return revents_;}; // 获取当前Channel发生的事件
   uint32_t GetEvents() {return events_;}; // 获取当前Channel关心的事件
   bool GetIsPolled() {return is_polled_;}; 
+  bool GetIsBlocked() {return is_blocked_;};
   void HandleEvents(); //处理当前Channel发生的事件
-
 
   void EnableReading();
   void EnableETReading();
@@ -51,7 +49,8 @@ private:
   void set_fd_noblocked();
   void update_channel_events();
   int32_t fd_; //Channel所管理的fd
-  std::shared_ptr<EventLoop> loop_; // Channel被哪个EventLoop所管理
+  bool is_blocked_; // 文件描述符的读写是否是阻塞的
+  EventLoop* loop_; // Channel被哪个EventLoop所管理
   bool is_polled_; // 指示是否已经被加入到epoll中监听
   uint32_t events_; // 本Channel所关心的事件
   uint32_t revents_; // epoll返回的实际发生的事件
