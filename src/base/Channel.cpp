@@ -12,7 +12,6 @@ namespace xtc{
 
 Channel::Channel(EventLoop* loop, int32_t fd) :fd_(fd), is_blocked_(true), 
     loop_(loop), is_polled_(false),events_(0), revents_(0) {
-
 }
 
 Channel::~Channel() {

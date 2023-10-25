@@ -19,6 +19,7 @@ public:
   void listen();
   int32_t Accept(InetAddress& address);
   int32_t const& GetFd() {return fd_;} ;
+  void Connect(InetAddress* address);
 
 
 private:

@@ -7,49 +7,36 @@
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 
-//C++ 标准库
+
 #include <thread>
 #include <chrono>
-// C标准库
-#include <cstring>
-// 系统库
+#include <cstdio>
+#include <iostream>
 #include <arpa/inet.h>
 #include <unistd.h>
-// 其他
-#include "util/error_process.h"
 
-
-#include <cstdio>
-
-
+#include "base/Connection.h"
+#include "base/Socket.h"
+#include "base/InetAddress.h"
+#include "util/Logger.h"
 int main(){
-  int socketfd = socket(AF_INET, SOCK_STREAM, 0);
-  xtc::errif(socketfd == -1,"create socket error!\n");
-
-  struct sockaddr_in serv_addr;
-  bzero(&serv_addr,sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(8888);
-  serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-  int res = connect(socketfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-  xtc::errif(res == -1,"connect error!\n");
-
-  char buf[1024];
-  bzero(buf,sizeof(buf));
-  for(int i = 0; i < 20000; ++i){
-    snprintf(buf,sizeof(buf), "hello id: %d", i);
-    int write_bytes = write(socketfd, buf,sizeof(buf));
-    if(write_bytes > 0) {
-      printf("message send succeed : %s\n", buf);
-    } else if(write_bytes == 0){      //read返回0，表示EOF，通常是服务器断开链接，等会儿进行测试
-      printf("server socket disconnected!\n");
-      break;
-    } else {
-      xtc::errif(true, "client send error");
+  xtc::Logger logger = xtc::Logger::GetInstance();
+  logger.Init("conf/log4cxx.properties");
+  LOG4CXX_INFO(xtc::Logger::GetLogger(), "server start ");
+  xtc::InetAddress *addr= new xtc::InetAddress("127.0.0.1", 8888);
+  xtc::Socket* socket = new xtc::Socket();
+  socket -> Connect(addr);
+  xtc::Connection* conn = new xtc::Connection(nullptr, socket);
+  try {
+    for(int32_t i = 0; i < 200; ++i) {
+      conn ->SetWriteBuf("hello " + std::to_string(i));
+      conn ->Write();
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      // conn->Read();
     }
-     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+  } catch (const std::exception& e) {
+    std::cout << e.what() << std::endl;
   }
-  close(socketfd);
+
   return 0;
 }

@@ -15,6 +15,17 @@ Connection::Connection(EventLoop* loop, int32_t fd):loop_(loop), ch_(nullptr),
 
 }
 
+Connection::Connection(EventLoop* loop, Socket*  socket):loop_(loop), ch_(nullptr),
+    read_buf_(nullptr), write_buf_(nullptr), state_(ConnState::CONNECTED){
+  read_buf_ = std::make_unique<Buffer>();
+  write_buf_ = std::make_unique<Buffer>();
+  ch_ = std::make_unique<Channel>(loop_, socket->GetFd());
+  if(loop_)
+    ch_ -> EnableETReading();
+
+}
+
+
 Connection::~Connection() {
   LOG4CXX_INFO(Logger::GetLogger(), "connection closed");
 }
@@ -39,6 +50,11 @@ void Connection::Read() {
 
 void Connection::Close() {
   dis_conn_callback_(ch_.get());
+}
+
+void Connection::SetWriteBuf(std::string contex) {
+  write_buf_ -> Clear();
+  write_buf_ -> Append(contex.c_str(), contex.size());
 }
 
 void Connection::blocked_read() {
@@ -79,11 +95,17 @@ void Connection::no_blocked_read() {
 }
 
 void Connection::Write() {
-
+  if (ch_ ->GetIsBlocked()) {
+    blockedWrite();
+  } else {
+    no_blocked_write();
+  }
+  LOG4CXX_DEBUG(Logger::GetLogger(),"send message: " << write_buf_ ->GetStr() );
 }
 
 void Connection::blockedWrite() {
-
+  int32_t write_bytes = ::write(ch_ ->GetFd(),
+      reinterpret_cast<const void*>( write_buf_ ->GetStr()), write_buf_ -> GetSize());
 }
 
 void Connection::no_blocked_write() {

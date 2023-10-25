@@ -7,6 +7,7 @@
 #include "base/Channel.h"
 #include "base/EventLoop.h"
 #include "base/Buffer.h"
+#include "base/Socket.h"
 
 namespace xtc {
 class Connection {
@@ -19,6 +20,8 @@ public:
   };
 
   Connection(EventLoop* loop, int32_t fd);
+  Connection(EventLoop* loop, Socket*  socket);
+
   ~Connection();
   void SetNewMsgCallback(NewMsgCallback cb);
   void SetDisconnectCallback(DisConnectCallback cb);
@@ -28,6 +31,7 @@ public:
   ConnState GetState() {return state_;};
   /// @brief  关闭当前连接 
   void Close();
+  void SetWriteBuf(std::string contex);
 
 private:
   void blocked_read();

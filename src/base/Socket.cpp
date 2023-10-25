@@ -53,6 +53,11 @@ namespace xtc{
     return client_fd;
   }
 
+  void  Socket::Connect(InetAddress* address) {
+    auto so_addr =  address->GetAddr();
+    int32_t conn_res = ::connect(fd_, reinterpret_cast<sockaddr*>(&so_addr), sizeof(so_addr));
+    
+  }
 
 } // namespace xtc
 
