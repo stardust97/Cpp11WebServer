@@ -44,7 +44,9 @@ void Server::on_new_connection(Socket* socket) {
   LOG4CXX_INFO(Logger::GetLogger(), " client fd: " << client_fd << " ip: " \
       << inet_ntoa(client_addr.sin_addr) << " port: " << ntohs(client_addr.sin_port));
   int32_t random = client_fd % sub_reactor_.size(); // 当前使用简单的哈希算法实现负载分配
-  Connection* conn = new Connection(sub_reactor_[random], client_fd);
+  // Connection* conn = new Connection(sub_reactor_[random], client_fd);
+  Socket client_socket(client_fd);
+  Connection* conn = new Connection(sub_reactor_[random], &client_socket);
   conn -> SetNewMsgCallback(on_connect_callback_);
   // TODO 关闭连接的回调函数可以用Channel中的CloseCallback
   conn ->SetDisconnectCallback(std::bind(&Server::on_close_connection, this, std::placeholders::_1));
@@ -52,6 +54,7 @@ void Server::on_new_connection(Socket* socket) {
 }
 
 void Server::on_close_connection(Channel* ch) {
+  printf("close connection\n");
   Connection* conn = connections_[ch->GetFd()];
   connections_.erase(ch->GetFd());
   delete conn;

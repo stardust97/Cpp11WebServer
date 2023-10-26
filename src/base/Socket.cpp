@@ -13,6 +13,10 @@ namespace xtc{
     fd_ = sockfd;
   }
 
+  Socket::Socket(int32_t fd) :fd_(fd) {
+
+  }
+  
   Socket::Socket(InetAddress const& address) {
     int32_t sockfd = socket(AF_INET, SOCK_STREAM, 0);
     fd_ = sockfd;

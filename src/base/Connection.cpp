@@ -11,8 +11,10 @@ Connection::Connection(EventLoop* loop, int32_t fd):loop_(loop), ch_(nullptr),
   read_buf_ = std::make_unique<Buffer>();
   write_buf_ = std::make_unique<Buffer>();
   ch_ = std::make_unique<Channel>(loop_, fd);
-  ch_ -> EnableETReading();
-
+  if(loop_) {
+    ch_ -> EnableETReading();
+    printf("channel add to loop\n");
+  }
 }
 
 Connection::Connection(EventLoop* loop, Socket*  socket):loop_(loop), ch_(nullptr),
@@ -20,9 +22,10 @@ Connection::Connection(EventLoop* loop, Socket*  socket):loop_(loop), ch_(nullpt
   read_buf_ = std::make_unique<Buffer>();
   write_buf_ = std::make_unique<Buffer>();
   ch_ = std::make_unique<Channel>(loop_, socket->GetFd());
-  if(loop_)
+  if(loop_) {
     ch_ -> EnableETReading();
-
+    printf("channel add to loop\n");
+  }
 }
 
 
@@ -46,6 +49,7 @@ void Connection::Read() {
   } else {
     no_blocked_read();
   }
+  LOG4CXX_DEBUG(Logger::GetLogger(), "client fd: " << ch_->GetFd() << " recv msg: " << read_buf_->GetStr() );
 }
 
 void Connection::Close() {
@@ -106,6 +110,7 @@ void Connection::Write() {
 void Connection::blockedWrite() {
   int32_t write_bytes = ::write(ch_ ->GetFd(),
       reinterpret_cast<const void*>( write_buf_ ->GetStr()), write_buf_ -> GetSize());
+      
 }
 
 void Connection::no_blocked_write() {
