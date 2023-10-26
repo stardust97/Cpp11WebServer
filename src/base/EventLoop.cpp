@@ -14,6 +14,7 @@ EventLoop::EventLoop(): ep_(nullptr), quit_(false) {
 EventLoop::~EventLoop() {
   quit_ = true; // stop loop
   delete ep_;
+  LOG4CXX_INFO(Logger::GetLogger(), "loop terminated");
 }
 
 void EventLoop::Loop() {
@@ -24,7 +25,6 @@ void EventLoop::Loop() {
     for (Channel* ch : active_events) {
       LOG4CXX_DEBUG(Logger::GetLogger(), "fd " << ch->GetFd() << " occur events: " << ch->GetEvents());
       ch ->HandleEvents();
-
     }
   }
 }

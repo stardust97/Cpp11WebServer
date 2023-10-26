@@ -43,12 +43,8 @@ void Connection::Read() {
 }
 
 void Connection::Close() {
+  LOG4CXX_INFO(Logger::GetLogger(), "close connection, fd: " << ch_ ->GetFd());
   dis_conn_callback_(ch_.get());
-}
-
-void Connection::SetWriteBuf(std::string contex) {
-  write_buf_ -> Clear();
-  write_buf_ -> Append(contex.c_str(), contex.size());
 }
 
 void Connection::blocked_read() {
@@ -83,32 +79,62 @@ void Connection::no_blocked_read() {
       break;
     } else if(read_bytes == -1 && errno == EINTR){  //客户端正常中断、继续读取
       LOG4CXX_DEBUG(Logger::GetLogger(), ", client fd: " << client_fd << " EINTR" ); //MARK 未显示？
-      break;
-    } 
+      continue;
+    } else {
+      LOG4CXX_DEBUG(Logger::GetLogger(), ", client fd: " << client_fd << " unkonwn event : " << errno );
+    }
   }
+  LOG4CXX_DEBUG(Logger::GetLogger(), "receive message: client fd: " << ch_ ->GetFd() 
+      << " message: " << read_buf_->GetStr());
 }
 
 void Connection::Write() {
   if (ch_ ->GetIsBlocked()) {
-    blockedWrite();
+    blocked_write();
   } else {
     no_blocked_write();
   }
   LOG4CXX_DEBUG(Logger::GetLogger(),"send message: " << write_buf_ ->GetStr() );
 }
 
-void Connection::blockedWrite() {
-  int32_t write_bytes = ::write(ch_ ->GetFd(),
-      reinterpret_cast<const void*>( write_buf_ ->GetStr()), write_buf_ -> GetSize());
-      
+
+void Connection::SetWriteBuf(const char* buf) {
+  write_buf_ -> Clear();
+  write_buf_ -> Append(buf, strlen(buf));
+}
+  
+void Connection::SetWriteBuf(std::string const& str) {
+  write_buf_ -> Clear();
+  write_buf_ -> Append(str.c_str(), str.size());
+}
+
+void Connection::blocked_write() {
+  int32_t write_bytes = ::write(ch_->GetFd(), write_buf_->GetStr(), write_buf_->GetSize());
+  if(write_bytes == -1) {
+    LOG4CXX_ERROR(Logger::GetLogger(), "Failed to write: " << errno);
+    return;
+  }
+  LOG4CXX_INFO( Logger::GetLogger(), "Send message: " << write_buf_ ->GetStr() );
 }
 
 void Connection::no_blocked_write() {
-
+  int32_t total_size = write_buf_ ->GetSize(), send_size = 0;
+  while (send_size < total_size ) {
+    int32_t write_bytes = ::write(ch_->GetFd(),
+        write_buf_->GetStr()+send_size, write_buf_->GetSize()-send_size);
+    if(write_bytes == -1 ) {
+      if((errno == EINTR || errno == EAGAIN)) {
+        LOG4CXX_DEBUG(Logger::GetLogger(), "write info: " << errno); 
+        continue;
+      }
+      else {
+        LOG4CXX_FATAL(Logger::GetLogger(), "write error: " << errno); 
+        break;
+      }
+    }
+    send_size += write_bytes;
+  }
 }
-
-
-
 
 
 

@@ -21,7 +21,7 @@ public:
 private:
   void on_accept_new_connection();
   EventLoop* loop_;
-  Socket* socket_;
+  Socket* socket_; // 接收新连接的socket
   Channel* accept_channel_;
   NewConnectionCallback callback_; // 发生新连接时的函数
 };

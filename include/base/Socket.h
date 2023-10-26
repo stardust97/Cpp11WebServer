@@ -16,16 +16,15 @@ public:
   Socket(int32_t fd);
   ~Socket();
 
-  void bind(InetAddress const& address);
-  void listen();
-  int32_t Accept(InetAddress& address);
+  void Bind(InetAddress& address);
+  void Listen();
+  int32_t Accept(InetAddress* address);
   int32_t const& GetFd() {return fd_;} ;
   void Connect(InetAddress* address);
 
 
 private:
   int32_t fd_;
-  std::shared_ptr<InetAddress> address_;
 };
 
 

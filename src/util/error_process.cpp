@@ -11,7 +11,7 @@ namespace xtc{
 void errif(bool condition, const char* errmsg) {
   if(condition) {
     perror(errmsg);
-    printf("%s\n",strerror(errno));
+    printf("error : %s\n",strerror(errno));
     exit(EXIT_FAILURE);
   }
 }

@@ -18,6 +18,7 @@ Channel::~Channel() {
   if(is_polled_) {
     loop_ -> DisableChannel(this);
   }
+  LOG4CXX_INFO(Logger::GetLogger(), "Channel fd " << fd_ << " closed");
   close(fd_);
   LOG4CXX_INFO(Logger::GetLogger(),"channel closed, fd: " << fd_);
 }

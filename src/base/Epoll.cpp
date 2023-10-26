@@ -16,6 +16,7 @@ Epoll::Epoll(): epoll_fd_(epoll_create1(0)), events_(kInitEventListSize) {
   if(epoll_fd_ == -1 ) {
     LOG4CXX_ERROR(Logger::GetLogger(), "epoll create failed");
   }
+  polled_nums_ = 0;
 }
 
 Epoll::~Epoll() {
@@ -38,6 +39,7 @@ void Epoll::AddToEpoll(Channel* channel, uint32_t events){
   LOG4CXX_DEBUG(Logger::GetLogger(), " client fd: " << channel->GetFd() << " add to epoll, events: " \
       << channel->GetEvents());
   epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, channel->GetFd(), &ev);   
+  polled_nums_++;
 }
 
 void Epoll::RemoveFromEpoll(Channel* channel){

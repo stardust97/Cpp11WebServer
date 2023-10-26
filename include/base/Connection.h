@@ -18,22 +18,25 @@ public:
   enum class ConnState {
     CONNECTED, CLOSED
   };
-  Connection(EventLoop* loop, Socket*  socket);
+  
+  Connection(EventLoop* loop, Socket* socket);
   ~Connection();
+  
   void SetNewMsgCallback(NewMsgCallback cb);
   void SetDisconnectCallback(DisConnectCallback cb);
   void Read();
   void Write();
+  void SetWriteBuf(const char* buf);
+  void SetWriteBuf(std::string const& contex);
   /// @brief 获取当前连接的状态
   ConnState GetState() {return state_;};
   /// @brief  关闭当前连接 
   void Close();
-  void SetWriteBuf(std::string contex);
 
 private:
   void blocked_read();
   void no_blocked_read();
-  void blockedWrite();
+  void blocked_write();
   void no_blocked_write();
 
   constexpr static int32_t KMaxBufSize = 1024;

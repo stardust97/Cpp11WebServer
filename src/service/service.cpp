@@ -21,6 +21,7 @@ int main() {
         conn -> Close();
         return;
       }
+      LOG4CXX_DEBUG(xtc::Logger::GetLogger(), " read once ");
       // conn -> Write(); // TODO
     }
   );
