@@ -6,25 +6,15 @@
 #include "util/Logger.h"
 
 namespace xtc{
-Connection::Connection(EventLoop* loop, int32_t fd):loop_(loop), ch_(nullptr),
-    read_buf_(nullptr), write_buf_(nullptr), state_(ConnState::CONNECTED){
-  read_buf_ = std::make_unique<Buffer>();
-  write_buf_ = std::make_unique<Buffer>();
-  ch_ = std::make_unique<Channel>(loop_, fd);
-  if(loop_) {
-    ch_ -> EnableETReading();
-    printf("channel add to loop\n");
-  }
-}
 
-Connection::Connection(EventLoop* loop, Socket*  socket):loop_(loop), ch_(nullptr),
+Connection::Connection(EventLoop* loop, Socket*  socket):loop_(loop), socket_(nullptr),
     read_buf_(nullptr), write_buf_(nullptr), state_(ConnState::CONNECTED){
   read_buf_ = std::make_unique<Buffer>();
   write_buf_ = std::make_unique<Buffer>();
+  socket_  = std::unique_ptr<Socket>(socket);
   ch_ = std::make_unique<Channel>(loop_, socket->GetFd());
   if(loop_) {
     ch_ -> EnableETReading();
-    printf("channel add to loop\n");
   }
 }
 

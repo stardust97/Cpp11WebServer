@@ -31,7 +31,7 @@ int main(){
     for(int32_t i = 0; i < 200; ++i) {
       conn ->SetWriteBuf("hello " + std::to_string(i));
       conn ->Write();
-      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
       // conn->Read();
     }
   } catch (const std::exception& e) {

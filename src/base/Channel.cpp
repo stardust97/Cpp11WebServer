@@ -19,7 +19,7 @@ Channel::~Channel() {
     loop_ -> DisableChannel(this);
   }
   close(fd_);
-  printf("close fd %d\n", fd_);
+  LOG4CXX_INFO(Logger::GetLogger(),"channel closed, fd: " << fd_);
 }
 
 void Channel::SetRevents(uint32_t events) {

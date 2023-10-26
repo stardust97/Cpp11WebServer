@@ -27,7 +27,14 @@ void Acceptor::SetAcceptCallback(NewConnectionCallback const& cb) {
 }
 
 void Acceptor::on_accept_new_connection() {
-  callback_(socket_);
+  InetAddress cli_addr;
+  int32_t client_fd = socket_->Accept(cli_addr);
+  auto& client_addr = cli_addr.GetAddr();
+  LOG4CXX_INFO(Logger::GetLogger(), " client fd: " << client_fd << " ip: " \
+      << inet_ntoa(client_addr.sin_addr) << " port: " << ntohs(client_addr.sin_port));
+  // Connection* conn = new Connection(sub_reactor_[random], client_fd);
+  Socket *client_socket= new Socket(client_fd);
+  callback_(client_socket);
 }
 
 

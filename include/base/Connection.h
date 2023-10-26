@@ -18,10 +18,7 @@ public:
   enum class ConnState {
     CONNECTED, CLOSED
   };
-
-  Connection(EventLoop* loop, int32_t fd);
   Connection(EventLoop* loop, Socket*  socket);
-
   ~Connection();
   void SetNewMsgCallback(NewMsgCallback cb);
   void SetDisconnectCallback(DisConnectCallback cb);
@@ -42,6 +39,7 @@ private:
   constexpr static int32_t KMaxBufSize = 1024;
   EventLoop* loop_;
   std::unique_ptr<Channel> ch_; // 客户端连接的Channel
+  std::unique_ptr<Socket> socket_; // 客户端连接的Scoket
   std::unique_ptr<Buffer> read_buf_;
   std::unique_ptr<Buffer> write_buf_;
   ConnState state_;

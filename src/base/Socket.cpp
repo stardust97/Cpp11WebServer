@@ -14,9 +14,8 @@ namespace xtc{
   }
 
   Socket::Socket(int32_t fd) :fd_(fd) {
-
   }
-  
+
   Socket::Socket(InetAddress const& address) {
     int32_t sockfd = socket(AF_INET, SOCK_STREAM, 0);
     fd_ = sockfd;
@@ -24,7 +23,8 @@ namespace xtc{
   }
 
   Socket::~Socket() {
-    if (fd_!=-1) {
+    if (fd_!=-1) {// BUG 析构退出时关闭了文件描述符，导致连接中断
+      LOG4CXX_INFO(Logger::GetLogger(),"socket shutdown, fd: " << fd_);
       ::close(fd_);
     }
   }

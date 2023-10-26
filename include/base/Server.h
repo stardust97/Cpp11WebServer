@@ -24,6 +24,7 @@ public:
 
 private:
   /// @brief Acceptor接受新连接调用的回调函数
+  /// @param socket 客户端连接的Socket
   void on_new_connection(Socket* socket);
 
   void on_close_connection(Channel* ch);
